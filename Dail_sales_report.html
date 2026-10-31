@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Sales Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .step-hidden { display: none; }
+        .fade-in { animation: fadeIn 0.4s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <header class="bg-indigo-600 text-white shadow-md">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <i class="fa-solid fa-chart-line"></i> Daily Sales Report
+            </h1>
+            <div class="text-sm opacity-80" id="current-date"></div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-4xl mx-auto w-full px-4 py-8">
+        
+        <!-- Progress Steps -->
+        <div class="mb-8 flex items-center justify-between relative">
+            <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-slate-200 -z-10 rounded-full"></div>
+            <div class="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 bg-indigo-600 -z-10 rounded-full transition-all duration-300" id="progress-bar" style="width: 0%;"></div>
+            
+            <div class="step-indicator flex flex-col items-center gap-1" data-step="1">
+                <div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold shadow transition-colors step-circle">1</div>
+                <span class="text-xs font-medium text-slate-500 hidden sm:block">Inventory</span>
+            </div>
+            <div class="step-indicator flex flex-col items-center gap-1" data-step="2">
+                <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold shadow transition-colors step-circle">2</div>
+                <span class="text-xs font-medium text-slate-500 hidden sm:block">Products</span>
+            </div>
+            <div class="step-indicator flex flex-col items-center gap-1" data-step="3">
+                <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold shadow transition-colors step-circle">3</div>
+                <span class="text-xs font-medium text-slate-500 hidden sm:block">Sales Setup</span>
+            </div>
+            <div class="step-indicator flex flex-col items-center gap-1" data-step="4">
+                <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold shadow transition-colors step-circle">4</div>
+                <span class="text-xs font-medium text-slate-500 hidden sm:block">Entries</span>
+            </div>
+            <div class="step-indicator flex flex-col items-center gap-1" data-step="5">
+                <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold shadow transition-colors step-circle">5</div>
+                <span class="text-xs font-medium text-slate-500 hidden sm:block">Report</span>
+            </div>
+        </div>
+
+        <div id="step-1" class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-100 fade-in">
+            <h2 class="text-2xl font-semibold mb-2">Inventory Setup</h2>
+            <p class="text-slate-500 mb-6">How many distinct products do you want to track today?</p>
+            
+            <div class="max-w-md">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Total Number of Products</label>
+                <input type="number" id="total-products" min="1" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" placeholder="e.g. 5">
+                <p id="error-step-1" class="text-red-500 text-sm mt-2 hidden">Please enter a valid number greater than 0.</p>
+            </div>
+            
+            <div class="mt-8 flex justify-end">
+                <button onclick="nextStep(2)" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2">
+                    Continue <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="step-2" class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-100 step-hidden fade-in">
+            <h2 class="text-2xl font-semibold mb-2">Product Details</h2>
+            <p class="text-slate-500 mb-6">Enter the name, price, and initial quantity for each product.</p>
+            
+            <div id="product-forms-container" class="space-y-4">
+                <!-- Dynamically generated forms will go here -->
+            </div>
+            
+            <p id="error-step-2" class="text-red-500 text-sm mt-4 hidden">Please fill out all fields correctly.</p>
+
+            <div class="mt-8 flex justify-between items-center">
+                <button onclick="prevStep(1)" class="text-slate-500 hover:text-slate-800 font-medium px-4 py-2">Back</button>
+                <button onclick="saveProductsAndContinue()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors">
+                    Save Products & Continue
+                </button>
+            </div>
+        </div>
+
+        <div id="step-3" class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-100 step-hidden fade-in">
+            <h2 class="text-2xl font-semibold mb-2">Sales Overview</h2>
+            <p class="text-slate-500 mb-6" id="types-sold-desc">Out of your <span class="font-bold text-indigo-600" id="display-total-products">0</span> products, how many types were sold today?</p>
+            
+            <div class="max-w-md">
+                <label class="block text-sm font-medium text-slate-700 mb-2">Types of Products Sold</label>
+                <input type="number" id="types-sold" min="0" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" placeholder="e.g. 2">
+                <p id="error-step-3" class="text-red-500 text-sm mt-2 hidden">Invalid input.</p>
+            </div>
+            
+            <div class="mt-8 flex justify-between items-center">
+                <button onclick="prevStep(2)" class="text-slate-500 hover:text-slate-800 font-medium px-4 py-2">Back</button>
+                <button onclick="validateSalesSetupAndContinue()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors">
+                    Continue to Entries
+                </button>
+            </div>
+        </div>
+
+        <div id="step-4" class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-100 step-hidden fade-in">
+            <h2 class="text-2xl font-semibold mb-2">Sales Entries</h2>
+            <p class="text-slate-500 mb-6">Select the product and enter the sold quantity.</p>
+            
+            <div id="sales-forms-container" class="space-y-4">
+                <!-- Dynamically generated sales forms will go here -->
+            </div>
+            
+            <p id="error-step-4" class="text-red-500 text-sm mt-4 hidden"></p>
+
+            <div class="mt-8 flex justify-between items-center">
+                <button onclick="prevStep(3)" class="text-slate-500 hover:text-slate-800 font-medium px-4 py-2">Back</button>
+                <button onclick="generateReport()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie"></i> Generate Report
+                </button>
+            </div>
+        </div>
+
+        <div id="step-5" class="step-hidden fade-in space-y-6">
+            
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+                    <p class="text-sm text-slate-500 font-medium mb-1">Total Revenue</p>
+                    <p class="text-2xl font-bold text-slate-800" id="rep-revenue">₹0</p>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
+                    <p class="text-sm text-slate-500 font-medium mb-1">Average Sale</p>
+                    <p class="text-2xl font-bold text-slate-800" id="rep-average">₹0</p>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-emerald-100 bg-emerald-50/30">
+                    <p class="text-sm text-emerald-600 font-medium mb-1">Top Selling</p>
+                    <p class="text-lg font-bold text-slate-800 truncate" id="rep-max-name">-</p>
+                    <p class="text-xs text-emerald-600 mt-1"><span id="rep-max-qty">0</span> units</p>
+                </div>
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-rose-100 bg-rose-50/30">
+                    <p class="text-sm text-rose-600 font-medium mb-1">Lowest Selling</p>
+                    <p class="text-lg font-bold text-slate-800 truncate" id="rep-min-name">-</p>
+                    <p class="text-xs text-rose-600 mt-1"><span id="rep-min-qty">0</span> units</p>
+                </div>
+            </div>
+
+            <!-- Inventory Table -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                    <h3 class="text-lg font-semibold">Updated Inventory</h3>
+                    <button onclick="downloadCSV()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-download"></i> Download CSV
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-600 text-sm border-b border-slate-200">
+                                <th class="px-6 py-3 font-medium">ID</th>
+                                <th class="px-6 py-3 font-medium">Product Name</th>
+                                <th class="px-6 py-3 font-medium">Price</th>
+                                <th class="px-6 py-3 font-medium">Initial Qty</th>
+                                <th class="px-6 py-3 font-medium text-indigo-600">Sold</th>
+                                <th class="px-6 py-3 font-medium">Remaining</th>
+                            </tr>
+                        </thead>
+                        <tbody id="report-table-body" class="divide-y divide-slate-100">
+                            <!-- Table rows generated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="flex justify-center mt-8">
+                <button onclick="resetApp()" class="text-slate-500 hover:text-indigo-600 font-medium transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> Start New Report
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Example function to call when user clicks "Generate Report"
+async function sendDataToBackend() {
+    // Collect your data from the UI
+    const payload = {
+        products: [
+            { ID: 1, Name: "Shirt", Price: 500, Quantity: 10 },
+            { ID: 2, Name: "Pants", Price: 800, Quantity: 5 }
+        ],
+        soldData: [
+            { ID: 1, Quantity: 2 },
+            { ID: 2, Quantity: 1 }
+        ]
+    };
+
+    try {
+        // Send data to Python (running on localhost:5000)
+        const response = await fetch('http://127.0.0.1:5000/generate-report', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        
+        // Show success message from Python in your UI
+        alert(result.message);
+        console.log("Total Revenue calculated by Python:", result.revenue);
+
+    } catch (error) {
+        console.error("Error connecting to backend:", error);
+        alert("Failed to connect to Python server. Is it running?");
+    }
+}
+</script>
+</body>
+</html>
