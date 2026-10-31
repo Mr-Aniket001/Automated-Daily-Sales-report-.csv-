@@ -189,41 +189,257 @@
     </main>
 
     <script>
-        // Example function to call when user clicks "Generate Report"
-async function sendDataToBackend() {
-    // Collect your data from the UI
-    const payload = {
-        products: [
-            { ID: 1, Name: "Shirt", Price: 500, Quantity: 10 },
-            { ID: 2, Name: "Pants", Price: 800, Quantity: 5 }
-        ],
-        soldData: [
-            { ID: 1, Quantity: 2 },
-            { ID: 2, Quantity: 1 }
-        ]
-    };
+        let products = [];
+        let soldData = [];
+        let reportData = null;
 
-    try {
-        // Send data to Python (running on localhost:5000)
-        const response = await fetch('http://127.0.0.1:5000/generate-report', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
+        document.getElementById('current-date').textContent =
+            new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 
-        const result = await response.json();
-        
-        // Show success message from Python in your UI
-        alert(result.message);
-        console.log("Total Revenue calculated by Python:", result.revenue);
+        function nextStep(step) {
+            if (step === 2) {
+                const totalProducts = Number(document.getElementById('total-products').value);
+                const error = document.getElementById('error-step-1');
 
-    } catch (error) {
-        console.error("Error connecting to backend:", error);
-        alert("Failed to connect to Python server. Is it running?");
-    }
-}
+                if (!Number.isInteger(totalProducts) || totalProducts < 1) {
+                    error.classList.remove('hidden');
+                    return;
+                }
+
+                error.classList.add('hidden');
+                generateProductForms(totalProducts);
+            }
+            showStep(step);
+        }
+
+        function prevStep(step) {
+            showStep(step);
+        }
+
+        function showStep(step) {
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`step-${i}`).classList.toggle('step-hidden', i !== step);
+            }
+
+            document.querySelectorAll('.step-indicator').forEach((indicator) => {
+                const indicatorStep = Number(indicator.dataset.step);
+                const circle = indicator.querySelector('.step-circle');
+                circle.classList.toggle('bg-indigo-600', indicatorStep <= step);
+                circle.classList.toggle('text-white', indicatorStep <= step);
+                circle.classList.toggle('bg-slate-200', indicatorStep > step);
+                circle.classList.toggle('text-slate-500', indicatorStep > step);
+            });
+
+            document.getElementById('progress-bar').style.width = `${((step - 1) / 4) * 100}%`;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function generateProductForms(totalProducts) {
+            const container = document.getElementById('product-forms-container');
+            container.innerHTML = '';
+
+            for (let i = 0; i < totalProducts; i++) {
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 rounded-lg border border-slate-200 p-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Product ${i + 1} Name</label>
+                            <input class="product-name w-full px-3 py-2 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Price</label>
+                            <input type="number" min="0" step="0.01" class="product-price w-full px-3 py-2 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Initial Quantity</label>
+                            <input type="number" min="0" step="1" class="product-quantity w-full px-3 py-2 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        </div>
+                    </div>
+                `);
+            }
+        }
+
+        function saveProductsAndContinue() {
+            const names = document.querySelectorAll('.product-name');
+            const prices = document.querySelectorAll('.product-price');
+            const quantities = document.querySelectorAll('.product-quantity');
+            const error = document.getElementById('error-step-2');
+            products = [];
+
+            for (let i = 0; i < names.length; i++) {
+                const name = names[i].value.trim();
+                const price = Number(prices[i].value);
+                const quantity = Number(quantities[i].value);
+
+                if (!name || !Number.isFinite(price) || price < 0 ||
+                    !Number.isInteger(quantity) || quantity < 0) {
+                    error.classList.remove('hidden');
+                    return;
+                }
+
+                products.push({ ID: i + 1, Name: name, Price: price, Quantity: quantity });
+            }
+
+            error.classList.add('hidden');
+            document.getElementById('display-total-products').textContent = products.length;
+            showStep(3);
+        }
+
+        function validateSalesSetupAndContinue() {
+            const typesSold = Number(document.getElementById('types-sold').value);
+            const error = document.getElementById('error-step-3');
+
+            if (!Number.isInteger(typesSold) || typesSold < 0 || typesSold > products.length) {
+                error.textContent = `Enter a value between 0 and ${products.length}.`;
+                error.classList.remove('hidden');
+                return;
+            }
+
+            error.classList.add('hidden');
+            generateSalesForms(typesSold);
+            showStep(4);
+        }
+
+        function generateSalesForms(typesSold) {
+            const container = document.getElementById('sales-forms-container');
+            container.innerHTML = '';
+            const options = products.map((product) =>
+                `<option value="${product.ID}">${escapeHtml(product.Name)}</option>`
+            ).join('');
+
+            for (let i = 0; i < typesSold; i++) {
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-lg border border-slate-200 p-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Product</label>
+                            <select class="sold-product w-full px-3 py-2 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-indigo-500">
+                                ${options}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Quantity Sold</label>
+                            <input type="number" min="1" step="1" class="sold-quantity w-full px-3 py-2 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                `);
+            }
+        }
+
+        async function generateReport() {
+            const productInputs = document.querySelectorAll('.sold-product');
+            const quantityInputs = document.querySelectorAll('.sold-quantity');
+            const error = document.getElementById('error-step-4');
+            soldData = [];
+            const selectedIDs = new Set();
+
+            for (let i = 0; i < productInputs.length; i++) {
+                const id = Number(productInputs[i].value);
+                const quantity = Number(quantityInputs[i].value);
+                const product = products.find((item) => item.ID === id);
+
+                if (selectedIDs.has(id)) {
+                    error.textContent = 'Each sold product must be selected only once.';
+                    error.classList.remove('hidden');
+                    return;
+                }
+                if (!Number.isInteger(quantity) || quantity < 1 || quantity > product.Quantity) {
+                    error.textContent = `${product.Name} has only ${product.Quantity} units available.`;
+                    error.classList.remove('hidden');
+                    return;
+                }
+
+                selectedIDs.add(id);
+                soldData.push({ ID: id, Quantity: quantity });
+            }
+
+            error.classList.add('hidden');
+            await sendDataToBackend();
+        }
+
+        async function sendDataToBackend() {
+            const button = document.querySelector('button[onclick="generateReport()"]');
+            try {
+                button.disabled = true;
+                const response = await fetch('/generate-report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ products, soldData })
+                });
+
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.error || 'The backend could not generate the report.');
+                }
+
+                reportData = result;
+                renderReport(result);
+                showStep(5);
+            } catch (error) {
+                document.getElementById('error-step-4').textContent =
+                    error.message || 'Failed to connect to Python server. Is it running?';
+                document.getElementById('error-step-4').classList.remove('hidden');
+            } finally {
+                button.disabled = false;
+            }
+        }
+
+        function renderReport(result) {
+            document.getElementById('rep-revenue').textContent = `₹${Number(result.revenue).toLocaleString()}`;
+            document.getElementById('rep-average').textContent = `₹${Number(result.average).toLocaleString()}`;
+            document.getElementById('rep-max-name').textContent = result.max_product || '-';
+            document.getElementById('rep-max-qty').textContent = result.max_product_qty ?? 0;
+            document.getElementById('rep-min-name').textContent = result.min_product || '-';
+            document.getElementById('rep-min-qty').textContent = result.min_product_qty ?? 0;
+
+            document.getElementById('report-table-body').innerHTML = result.products.map((product) => `
+                <tr>
+                    <td class="px-6 py-4 text-sm">${product.ID}</td>
+                    <td class="px-6 py-4 text-sm font-medium">${escapeHtml(product.Name)}</td>
+                    <td class="px-6 py-4 text-sm">₹${Number(product.Price).toLocaleString()}</td>
+                    <td class="px-6 py-4 text-sm">${product.InitialQuantity}</td>
+                    <td class="px-6 py-4 text-sm text-indigo-600 font-semibold">${product.Sold}</td>
+                    <td class="px-6 py-4 text-sm">${product.Quantity}</td>
+                </tr>
+            `).join('');
+        }
+
+        function downloadCSV() {
+            if (!reportData) return;
+
+            const rows = [
+                ['ID', 'Product', 'Price', 'Initial Quantity', 'Sold', 'Remaining']
+            ];
+            reportData.products.forEach((product) => rows.push([
+                product.ID, product.Name, product.Price, product.InitialQuantity, product.Sold, product.Quantity
+            ]));
+            rows.push([], ['Total Revenue', reportData.revenue], ['Average Sale', reportData.average]);
+
+            const csv = rows.map((row) => row.map((value) =>
+                `"${String(value ?? '').replace(/"/g, '""')}"`
+            ).join(',')).join('\n');
+            const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = reportData.filename || 'sales_report.csv';
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function resetApp() {
+            products = [];
+            soldData = [];
+            reportData = null;
+            document.getElementById('total-products').value = '';
+            document.getElementById('types-sold').value = '';
+            document.getElementById('product-forms-container').innerHTML = '';
+            document.getElementById('sales-forms-container').innerHTML = '';
+            showStep(1);
+        }
+
+        function escapeHtml(value) {
+            const element = document.createElement('div');
+            element.textContent = value;
+            return element.innerHTML;
+        }
 </script>
 </body>
 </html>

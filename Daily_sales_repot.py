@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import csv
 from datetime import datetime
@@ -6,11 +6,20 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app) # Allows frontend to communicate with backend
 
+@app.route('/')
+def index():
+    return send_from_directory(app.root_path, 'Dail_sales_report.html')
+
 @app.route('/generate-report', methods=['POST'])
 def generate_report():
-    data = request.json
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Invalid JSON request."}), 400
+
     products = data.get('products', [])
     sold_data = data.get('soldData', [])
+    if not isinstance(products, list) or not isinstance(sold_data, list):
+        return jsonify({"error": "Products and soldData must be lists."}), 400
     
     filename = f"sales_report_{datetime.now().strftime('%Y-%m-%d')}.csv"
     
@@ -19,6 +28,10 @@ def generate_report():
     r_qty = 0
     
     for product in products:
+        if not all(key in product for key in ('ID', 'Name', 'Price', 'Quantity')):
+            return jsonify({"error": "Each product must include ID, Name, Price, and Quantity."}), 400
+
+        product['InitialQuantity'] = product['Quantity']
         product['Total'] = product['Price'] * product['Quantity']
         product['Sold'] = 0
         
@@ -54,9 +67,14 @@ def generate_report():
     return jsonify({
         "message": f"CSV report saved as '{filename}' successfully!",
         "revenue": report["Revenue"],
+        "average": report["Average"],
         "max_product": max_product.get("Name", ""),
-        "min_product": min_product.get("Name", "")
+        "max_product_qty": max_product.get("Sold", 0),
+        "min_product": min_product.get("Name", ""),
+        "min_product_qty": min_product.get("Sold", 0),
+        "filename": filename,
+        "products": products
     })
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000)\
