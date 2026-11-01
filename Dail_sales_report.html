@@ -35,6 +35,12 @@ h1, h2 {
     margin-top: 30px;
 }
 
+label {
+    display: block;
+    font-size: 15px;
+    color: #333;
+}
+
 input, select {
     width: 100%;
     padding: 12px;
@@ -44,11 +50,15 @@ input, select {
     margin-top: 7px;
 }
 
+/* Updated to match the bordered card style of the second photo */
 .form-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-bottom: 15px;
+    gap: 15px;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 12px;
 }
 
 .sale-grid {
@@ -144,6 +154,7 @@ td, th {
 <!-- PRODUCT SECTION -->
 <div class="section">
 <h2>1. Product Inventory</h2>
+<p>Enter product details and initial stock quantities.</p>
 
 <div id="products"></div>
 
@@ -181,6 +192,7 @@ Generate Report
 let productCount = 0;
 let saleCount = 0;
 
+// Updated with top labels inside a bordered card like the second photo
 function addProduct() {
     productCount++;
 
@@ -188,12 +200,27 @@ function addProduct() {
     div.className = "form-grid product-row";
 
     div.innerHTML = `
-        <input class="pid" placeholder="Product ID">
-        <input class="pname" placeholder="Product Name">
-        <input class="price" type="number" min="0"
-               step="0.01" placeholder="Price">
-        <input class="quantity" type="number" min="0"
-               step="1" placeholder="Initial Quantity">
+        <div>
+            <label>Product ID</label>
+            <input class="pid" placeholder="Enter product ID">
+        </div>
+
+        <div>
+            <label>Product Name</label>
+            <input class="pname" placeholder="Enter product name">
+        </div>
+
+        <div>
+            <label>Product Price</label>
+            <input class="price" type="number" min="0"
+                   step="0.01" placeholder="Enter price">
+        </div>
+
+        <div>
+            <label>Product Quantity</label>
+            <input class="quantity" type="number" min="0"
+                   step="1" placeholder="Enter quantity">
+        </div>
     `;
 
     document.getElementById("products").appendChild(div);
@@ -271,7 +298,6 @@ function showMessage(message, type) {
     box.textContent = message;
 }
 
-// Helper to escape CSV values safely
 function escapeCSV(val) {
     const str = String(val ?? "");
     if (str.includes(",") || str.includes('"') || str.includes("\n")) {
@@ -280,7 +306,6 @@ function escapeCSV(val) {
     return str;
 }
 
-// Fallback generator if Python backend is not running
 function generateLocalCSVReport(products, soldData) {
     const productMap = {};
     const clonedProducts = products.map(p => {
@@ -338,7 +363,6 @@ function generateLocalCSVReport(products, soldData) {
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const blobUrl = URL.createObjectURL(blob);
 
-    // Automatically trigger CSV download to computer's Downloads folder
     const link = document.createElement("a");
     link.href = blobUrl;
     link.download = filename;
@@ -361,7 +385,6 @@ function generateLocalCSVReport(products, soldData) {
     };
 }
 
-// Try connecting to Flask on port 5001 or 5000
 async function sendToBackend(payload) {
     const candidateUrls = [
         "http://127.0.0.1:5001/generate-report",
@@ -394,7 +417,6 @@ async function sendToBackend(payload) {
                 throw new Error(json.error);
             }
         } catch (err) {
-            // If backend returned a validation error, throw it immediately
             if (err.message && !err.message.includes("Failed to fetch") && !err.message.includes("Unexpected token") && !err.message.includes("NetworkError")) {
                 throw err;
             }
@@ -472,10 +494,8 @@ async function generateReport() {
 
         showMessage("Generating report...", "success");
 
-        // 1. Try saving to Python backend's 'reports/' folder first
         let data = await sendToBackend({ products, soldData });
 
-        // 2. If Python server isn't running, generate & auto-download CSV directly
         if (!data) {
             data = generateLocalCSVReport(products, soldData);
         }
