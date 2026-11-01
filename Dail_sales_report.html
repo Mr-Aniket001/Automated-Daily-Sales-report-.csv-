@@ -1,445 +1,528 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Sales Report</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .step-hidden { display: none; }
-        .fade-in { animation: fadeIn 0.4s ease-in-out; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Sales Report</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+    padding: 30px;
+    color: #333;
+}
+
+.container {
+    max-width: 1000px;
+    margin: auto;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+}
+
+h1, h2 {
+    color: #26364a;
+}
+
+.section {
+    margin-top: 30px;
+}
+
+input, select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 7px;
+    font-size: 15px;
+    margin-top: 7px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 15px;
+}
+
+.sale-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+button {
+    border: none;
+    padding: 12px 20px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 15px;
+    margin: 5px 5px 5px 0;
+}
+
+.add-btn {
+    background: #e8f1ff;
+    color: #1769aa;
+}
+
+.generate-btn {
+    background: #07966f;
+    color: white;
+    font-weight: bold;
+    padding: 15px 25px;
+}
+
+.download-link {
+    display: inline-block;
+    margin-top: 10px;
+    background: #1769aa;
+    color: white;
+    text-decoration: none;
+    padding: 10px 16px;
+    border-radius: 7px;
+    font-size: 14px;
+}
+
+#message {
+    margin-top: 20px;
+    padding: 12px;
+    border-radius: 7px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.success {
+    background: #e3f8ed;
+    color: #08783e;
+}
+
+.error {
+    background: #ffe8e8;
+    color: #c62828;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+td, th {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+@media(max-width: 650px) {
+    .form-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .sale-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-    <header class="bg-indigo-600 text-white shadow-md">
-        <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-            <h1 class="text-xl font-bold flex items-center gap-2">
-                <i class="fa-solid fa-chart-line"></i> Daily Sales Report
-            </h1>
-            <div class="text-sm opacity-80" id="current-date"></div>
-        </div>
-    </header>
+<body>
 
-    <main class="flex-grow max-w-4xl mx-auto w-full px-4 py-8">
-        
-        <!-- Progress Steps -->
-        <div class="mb-8 flex items-center justify-between relative">
-            <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-slate-200 -z-10 rounded-full"></div>
-            <div class="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 bg-indigo-600 -z-10 rounded-full transition-all duration-300" id="progress-bar" style="width: 0%;"></div>
-            
-            <div class="step-indicator flex flex-col items-center gap-1" data-step="1">
-                <div class="w-8 h-8 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold shadow transition-colors step-circle">1</div>
-                <span class="text-xs font-medium text-slate-500 hidden sm:block">Inventory</span>
-            </div>
-            <div class="step-indicator flex flex-col items-center gap-1" data-step="2">
-                <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold shadow transition-colors step-circle">2</div>
-                <span class="text-xs font-medium text-slate-500 hidden sm:block">Products</span>
-            </div>
-            <div class="step-indicator flex flex-col items-center gap-1" data-step="3">
-                <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold shadow transition-colors step-circle">3</div>
-                <span class="text-xs font-medium text-slate-500 hidden sm:block">Sales Setup</span>
-            </div>
-            <div class="step-indicator flex flex-col items-center gap-1" data-step="4">
-                <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold shadow transition-colors step-circle">4</div>
-                <span class="text-xs font-medium text-slate-500 hidden sm:block">Entries</span>
-            </div>
-            <div class="step-indicator flex flex-col items-center gap-1" data-step="5">
-                <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center font-bold shadow transition-colors step-circle">5</div>
-                <span class="text-xs font-medium text-slate-500 hidden sm:block">Report</span>
-            </div>
-        </div>
+<div class="container">
 
-        <div id="step-1" class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-100 fade-in">
-            <h2 class="text-2xl font-semibold mb-2">Inventory Setup</h2>
-            <p class="text-slate-500 mb-6">How many distinct products do you want to track today?</p>
-            
-            <div class="max-w-md">
-                <label class="block text-sm font-medium text-slate-700 mb-2">Total Number of Products</label>
-                <input type="number" id="total-products" min="1" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" placeholder="e.g. 5">
-                <p id="error-step-1" class="text-red-500 text-sm mt-2 hidden">Please enter a valid number greater than 0.</p>
-            </div>
-            
-            <div class="mt-8 flex justify-end">
-                <button onclick="nextStep(2)" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2">
-                    Continue <i class="fa-solid fa-arrow-right"></i>
-                </button>
-            </div>
-        </div>
+<h1>Daily Sales Report</h1>
+<p>Manage products and generate your daily sales report.</p>
 
-        <div id="step-2" class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-100 step-hidden fade-in">
-            <h2 class="text-2xl font-semibold mb-2">Product Details</h2>
-            <p class="text-slate-500 mb-6">Enter the name, price, and initial quantity for each product.</p>
-            
-            <div id="product-forms-container" class="space-y-4">
-                <!-- Dynamically generated forms will go here -->
-            </div>
-            
-            <p id="error-step-2" class="text-red-500 text-sm mt-4 hidden">Please fill out all fields correctly.</p>
+<!-- PRODUCT SECTION -->
+<div class="section">
+<h2>1. Product Inventory</h2>
 
-            <div class="mt-8 flex justify-between items-center">
-                <button onclick="prevStep(1)" class="text-slate-500 hover:text-slate-800 font-medium px-4 py-2">Back</button>
-                <button onclick="saveProductsAndContinue()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors">
-                    Save Products & Continue
-                </button>
-            </div>
-        </div>
+<div id="products"></div>
 
-        <div id="step-3" class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-100 step-hidden fade-in">
-            <h2 class="text-2xl font-semibold mb-2">Sales Overview</h2>
-            <p class="text-slate-500 mb-6" id="types-sold-desc">Out of your <span class="font-bold text-indigo-600" id="display-total-products">0</span> products, how many types were sold today?</p>
-            
-            <div class="max-w-md">
-                <label class="block text-sm font-medium text-slate-700 mb-2">Types of Products Sold</label>
-                <input type="number" id="types-sold" min="0" class="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all" placeholder="e.g. 2">
-                <p id="error-step-3" class="text-red-500 text-sm mt-2 hidden">Invalid input.</p>
-            </div>
-            
-            <div class="mt-8 flex justify-between items-center">
-                <button onclick="prevStep(2)" class="text-slate-500 hover:text-slate-800 font-medium px-4 py-2">Back</button>
-                <button onclick="validateSalesSetupAndContinue()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors">
-                    Continue to Entries
-                </button>
-            </div>
+<button class="add-btn" onclick="addProduct()">
++ Add Product
+</button>
+</div>
+
+<!-- SALES SECTION -->
+<div class="section">
+<h2>2. Record Sales</h2>
+<p>Select the product and enter the sold quantity.</p>
+
+<div id="sales"></div>
+
+<button class="add-btn" onclick="addSale()">
++ Add Sale
+</button>
+</div>
+
+<!-- GENERATE REPORT -->
+<div class="section">
+<button class="generate-btn" onclick="generateReport()">
+Generate Report
+</button>
+</div>
+
+<div id="message" role="status" aria-live="polite"></div>
+
+<div id="result"></div>
+
+</div>
+
+<script>
+let productCount = 0;
+let saleCount = 0;
+
+function addProduct() {
+    productCount++;
+
+    const div = document.createElement("div");
+    div.className = "form-grid product-row";
+
+    div.innerHTML = `
+        <input class="pid" placeholder="Product ID">
+        <input class="pname" placeholder="Product Name">
+        <input class="price" type="number" min="0"
+               step="0.01" placeholder="Price">
+        <input class="quantity" type="number" min="0"
+               step="1" placeholder="Initial Quantity">
+    `;
+
+    document.getElementById("products").appendChild(div);
+    updateProductOptions();
+}
+
+function addSale() {
+    saleCount++;
+
+    const div = document.createElement("div");
+    div.className = "sale-grid sale-row";
+
+    div.innerHTML = `
+        <div>
+            <label>Product</label>
+            <select class="sale-product"></select>
         </div>
 
-        <div id="step-4" class="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-slate-100 step-hidden fade-in">
-            <h2 class="text-2xl font-semibold mb-2">Sales Entries</h2>
-            <p class="text-slate-500 mb-6">Select the product and enter the sold quantity.</p>
-            
-            <div id="sales-forms-container" class="space-y-4">
-                <!-- Dynamically generated sales forms will go here -->
-            </div>
-            
-            <p id="error-step-4" class="text-red-500 text-sm mt-4 hidden"></p>
-
-            <div class="mt-8 flex justify-between items-center">
-                <button onclick="prevStep(3)" class="text-slate-500 hover:text-slate-800 font-medium px-4 py-2">Back</button>
-                <button onclick="generateReport()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg font-medium transition-colors flex items-center gap-2">
-                    <i class="fa-solid fa-chart-pie"></i> Generate Report
-                </button>
-            </div>
+        <div>
+            <label>Quantity Sold</label>
+            <input class="sold-quantity"
+                   type="number"
+                   min="1"
+                   step="1"
+                   placeholder="Enter quantity">
         </div>
+    `;
 
-        <div id="step-5" class="step-hidden fade-in space-y-6">
-            
-            <!-- Summary Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
-                    <p class="text-sm text-slate-500 font-medium mb-1">Total Revenue</p>
-                    <p class="text-2xl font-bold text-slate-800" id="rep-revenue">₹0</p>
-                </div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-100">
-                    <p class="text-sm text-slate-500 font-medium mb-1">Average Sale</p>
-                    <p class="text-2xl font-bold text-slate-800" id="rep-average">₹0</p>
-                </div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-emerald-100 bg-emerald-50/30">
-                    <p class="text-sm text-emerald-600 font-medium mb-1">Top Selling</p>
-                    <p class="text-lg font-bold text-slate-800 truncate" id="rep-max-name">-</p>
-                    <p class="text-xs text-emerald-600 mt-1"><span id="rep-max-qty">0</span> units</p>
-                </div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-rose-100 bg-rose-50/30">
-                    <p class="text-sm text-rose-600 font-medium mb-1">Lowest Selling</p>
-                    <p class="text-lg font-bold text-slate-800 truncate" id="rep-min-name">-</p>
-                    <p class="text-xs text-rose-600 mt-1"><span id="rep-min-qty">0</span> units</p>
-                </div>
-            </div>
+    document.getElementById("sales").appendChild(div);
+    updateProductOptions();
+}
 
-            <!-- Inventory Table -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                <div class="p-6 border-b border-slate-100 flex justify-between items-center">
-                    <h3 class="text-lg font-semibold">Updated Inventory</h3>
-                    <button onclick="downloadCSV()" class="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-                        <i class="fa-solid fa-download"></i> Download CSV
-                    </button>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50 text-slate-600 text-sm border-b border-slate-200">
-                                <th class="px-6 py-3 font-medium">ID</th>
-                                <th class="px-6 py-3 font-medium">Product Name</th>
-                                <th class="px-6 py-3 font-medium">Price</th>
-                                <th class="px-6 py-3 font-medium">Initial Qty</th>
-                                <th class="px-6 py-3 font-medium text-indigo-600">Sold</th>
-                                <th class="px-6 py-3 font-medium">Remaining</th>
-                            </tr>
-                        </thead>
-                        <tbody id="report-table-body" class="divide-y divide-slate-100">
-                            <!-- Table rows generated here -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            
-            <div class="flex justify-center mt-8">
-                <button onclick="resetApp()" class="text-slate-500 hover:text-indigo-600 font-medium transition-colors flex items-center gap-2">
-                    <i class="fa-solid fa-rotate-right"></i> Start New Report
-                </button>
-            </div>
-        </div>
+function updateProductOptions() {
+    const productRows = document.querySelectorAll(".product-row");
+    const options = [];
 
-    </main>
+    productRows.forEach(row => {
+        const id = row.querySelector(".pid").value.trim();
+        const name = row.querySelector(".pname").value.trim();
 
-    <script>
-        let products = [];
-        let soldData = [];
-        let reportData = null;
-
-        document.getElementById('current-date').textContent =
-            new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-
-        function nextStep(step) {
-            if (step === 2) {
-                const totalProducts = Number(document.getElementById('total-products').value);
-                const error = document.getElementById('error-step-1');
-
-                if (!Number.isInteger(totalProducts) || totalProducts < 1) {
-                    error.classList.remove('hidden');
-                    return;
-                }
-
-                error.classList.add('hidden');
-                generateProductForms(totalProducts);
-            }
-            showStep(step);
+        if (id && name) {
+            options.push({
+                id: id,
+                name: name
+            });
         }
+    });
 
-        function prevStep(step) {
-            showStep(step);
+    document.querySelectorAll(".sale-product").forEach(select => {
+        const previousValue = select.value;
+
+        select.innerHTML = '<option value="">Select Product</option>';
+
+        options.forEach(product => {
+            const option = document.createElement("option");
+            option.value = product.id;
+            option.textContent = product.name;
+            select.appendChild(option);
+        });
+
+        if (options.some(p => p.id === previousValue)) {
+            select.value = previousValue;
         }
+    });
+}
 
-        function showStep(step) {
-            for (let i = 1; i <= 5; i++) {
-                document.getElementById(`step-${i}`).classList.toggle('step-hidden', i !== step);
-            }
+document.getElementById("products").addEventListener(
+    "input",
+    updateProductOptions
+);
 
-            document.querySelectorAll('.step-indicator').forEach((indicator) => {
-                const indicatorStep = Number(indicator.dataset.step);
-                const circle = indicator.querySelector('.step-circle');
-                circle.classList.toggle('bg-indigo-600', indicatorStep <= step);
-                circle.classList.toggle('text-white', indicatorStep <= step);
-                circle.classList.toggle('bg-slate-200', indicatorStep > step);
-                circle.classList.toggle('text-slate-500', indicatorStep > step);
+function showMessage(message, type) {
+    const box = document.getElementById("message");
+    box.className = type;
+    box.textContent = message;
+}
+
+// Helper to escape CSV values safely
+function escapeCSV(val) {
+    const str = String(val ?? "");
+    if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+        return `"${str.replace(/"/g, '""')}"`;
+    }
+    return str;
+}
+
+// Fallback generator if Python backend is not running
+function generateLocalCSVReport(products, soldData) {
+    const productMap = {};
+    const clonedProducts = products.map(p => {
+        const item = {
+            ID: p.ID,
+            Name: p.Name,
+            Price: p.Price,
+            InitialQuantity: p.Quantity,
+            Quantity: p.Quantity,
+            Sold: 0,
+            Total: Number((p.Price * p.Quantity).toFixed(2))
+        };
+        productMap[item.ID] = item;
+        return item;
+    });
+
+    let revenue = 0;
+    let totalSold = 0;
+
+    soldData.forEach(sale => {
+        const product = productMap[sale.ID];
+        product.Quantity -= sale.Quantity;
+        product.Sold += sale.Quantity;
+        revenue += product.Price * sale.Quantity;
+        totalSold += sale.Quantity;
+    });
+
+    revenue = Number(revenue.toFixed(2));
+    const average = totalSold ? Number((revenue / totalSold).toFixed(2)) : 0;
+
+    const maxProduct = clonedProducts.reduce((a, b) => (b.Sold > a.Sold ? b : a), clonedProducts[0]);
+    const minProduct = clonedProducts.reduce((a, b) => (b.Sold < a.Sold ? b : a), clonedProducts[0]);
+
+    const now = new Date();
+    const pad = n => String(n).padStart(2, "0");
+    const timestamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
+    const filename = `sales_report_${timestamp}.csv`;
+
+    const rows = [
+        ["ID", "Product", "Price", "Initial Quantity", "Remaining Quantity", "Total Price", "Sold"]
+    ];
+
+    clonedProducts.forEach(p => {
+        rows.push([p.ID, p.Name, p.Price, p.InitialQuantity, p.Quantity, p.Total, p.Sold]);
+    });
+
+    rows.push([]);
+    rows.push(["Daily Sales Summary"]);
+    rows.push(["Total Revenue", revenue]);
+    rows.push(["Average Sale", average]);
+    rows.push(["Maximum Sold Product", maxProduct.Name, maxProduct.Sold]);
+    rows.push(["Minimum Sold Product", minProduct.Name, minProduct.Sold]);
+
+    const csvContent = "\uFEFF" + rows.map(r => r.map(escapeCSV).join(",")).join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const blobUrl = URL.createObjectURL(blob);
+
+    // Automatically trigger CSV download to computer's Downloads folder
+    const link = document.createElement("a");
+    link.href = blobUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    return {
+        success: true,
+        message: "Sales report generated! CSV file downloaded automatically.",
+        revenue: revenue,
+        average: average,
+        max_product: maxProduct.Name,
+        max_product_qty: maxProduct.Sold,
+        min_product: minProduct.Name,
+        min_product_qty: minProduct.Sold,
+        filename: filename,
+        saved_path: "Downloads folder (Browser Auto-Save)",
+        download_url: blobUrl
+    };
+}
+
+// Try connecting to Flask on port 5001 or 5000
+async function sendToBackend(payload) {
+    const candidateUrls = [
+        "http://127.0.0.1:5001/generate-report",
+        "http://127.0.0.1:5000/generate-report"
+    ];
+
+    if (window.location.protocol.startsWith("http")) {
+        candidateUrls.unshift("/generate-report");
+    }
+
+    for (const url of candidateUrls) {
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(payload)
             });
 
-            document.getElementById('progress-bar').style.width = `${((step - 1) / 4) * 100}%`;
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const text = await response.text();
+            const json = JSON.parse(text);
+
+            if (response.ok && json.success) {
+                const baseUrl = url.replace("/generate-report", "");
+                json.download_url = `${baseUrl}/download/${encodeURIComponent(json.filename)}`;
+                return json;
+            } else if (json.error) {
+                throw new Error(json.error);
+            }
+        } catch (err) {
+            // If backend returned a validation error, throw it immediately
+            if (err.message && !err.message.includes("Failed to fetch") && !err.message.includes("Unexpected token") && !err.message.includes("NetworkError")) {
+                throw err;
+            }
+        }
+    }
+    return null;
+}
+
+async function generateReport() {
+    const message = document.getElementById("message");
+    const result = document.getElementById("result");
+
+    message.textContent = "";
+    message.className = "";
+    result.innerHTML = "";
+
+    try {
+        const products = [];
+
+        document.querySelectorAll(".product-row").forEach(row => {
+            const ID = row.querySelector(".pid").value.trim();
+            const Name = row.querySelector(".pname").value.trim();
+            const Price = Number(row.querySelector(".price").value);
+            const Quantity = Number(row.querySelector(".quantity").value);
+
+            if (!ID || !Name ||
+                row.querySelector(".price").value === "" ||
+                row.querySelector(".quantity").value === "" ||
+                !Number.isFinite(Price) ||
+                !Number.isInteger(Quantity) ||
+                Price < 0 || Quantity < 0) {
+
+                throw new Error("Enter valid product details.");
+            }
+
+            if (products.some(p => p.ID === ID)) {
+                throw new Error("Product IDs must be unique.");
+            }
+
+            products.push({ ID, Name, Price, Quantity });
+        });
+
+        if (products.length === 0) {
+            throw new Error("Please add at least one product.");
         }
 
-        function generateProductForms(totalProducts) {
-            const container = document.getElementById('product-forms-container');
-            container.innerHTML = '';
+        const soldData = [];
 
-            for (let i = 0; i < totalProducts; i++) {
-                container.insertAdjacentHTML('beforeend', `
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 rounded-lg border border-slate-200 p-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Product ${i + 1} Name</label>
-                            <input class="product-name w-full px-3 py-2 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-indigo-500" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Price</label>
-                            <input type="number" min="0" step="0.01" class="product-price w-full px-3 py-2 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-indigo-500" required>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Initial Quantity</label>
-                            <input type="number" min="0" step="1" class="product-quantity w-full px-3 py-2 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-indigo-500" required>
-                        </div>
-                    </div>
-                `);
+        document.querySelectorAll(".sale-row").forEach(row => {
+            const ID = row.querySelector(".sale-product").value;
+            const quantityInput = row.querySelector(".sold-quantity");
+            const Quantity = Number(quantityInput.value);
+
+            if (!ID || quantityInput.value === "" ||
+                !Number.isInteger(Quantity) || Quantity <= 0) {
+
+                throw new Error("Enter valid sales information.");
+            }
+
+            soldData.push({ ID, Quantity });
+        });
+
+        for (const product of products) {
+            const totalSold = soldData
+                .filter(sale => sale.ID === product.ID)
+                .reduce((sum, sale) => sum + sale.Quantity, 0);
+
+            if (totalSold > product.Quantity) {
+                throw new Error(
+                    "Sold quantity exceeds available stock for " +
+                    product.Name
+                );
             }
         }
 
-        function saveProductsAndContinue() {
-            const names = document.querySelectorAll('.product-name');
-            const prices = document.querySelectorAll('.product-price');
-            const quantities = document.querySelectorAll('.product-quantity');
-            const error = document.getElementById('error-step-2');
-            products = [];
+        showMessage("Generating report...", "success");
 
-            for (let i = 0; i < names.length; i++) {
-                const name = names[i].value.trim();
-                const price = Number(prices[i].value);
-                const quantity = Number(quantities[i].value);
+        // 1. Try saving to Python backend's 'reports/' folder first
+        let data = await sendToBackend({ products, soldData });
 
-                if (!name || !Number.isFinite(price) || price < 0 ||
-                    !Number.isInteger(quantity) || quantity < 0) {
-                    error.classList.remove('hidden');
-                    return;
-                }
-
-                products.push({ ID: i + 1, Name: name, Price: price, Quantity: quantity });
-            }
-
-            error.classList.add('hidden');
-            document.getElementById('display-total-products').textContent = products.length;
-            showStep(3);
+        // 2. If Python server isn't running, generate & auto-download CSV directly
+        if (!data) {
+            data = generateLocalCSVReport(products, soldData);
         }
 
-        function validateSalesSetupAndContinue() {
-            const typesSold = Number(document.getElementById('types-sold').value);
-            const error = document.getElementById('error-step-3');
+        showMessage(data.message, "success");
 
-            if (!Number.isInteger(typesSold) || typesSold < 0 || typesSold > products.length) {
-                error.textContent = `Enter a value between 0 and ${products.length}.`;
-                error.classList.remove('hidden');
-                return;
-            }
+        result.innerHTML = `
+            <h2>Sales Summary</h2>
 
-            error.classList.add('hidden');
-            generateSalesForms(typesSold);
-            showStep(4);
-        }
-
-        function generateSalesForms(typesSold) {
-            const container = document.getElementById('sales-forms-container');
-            container.innerHTML = '';
-            const options = products.map((product) =>
-                `<option value="${product.ID}">${escapeHtml(product.Name)}</option>`
-            ).join('');
-
-            for (let i = 0; i < typesSold; i++) {
-                container.insertAdjacentHTML('beforeend', `
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-lg border border-slate-200 p-4">
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Product</label>
-                            <select class="sold-product w-full px-3 py-2 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-indigo-500">
-                                ${options}
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-slate-700 mb-1">Quantity Sold</label>
-                            <input type="number" min="1" step="1" class="sold-quantity w-full px-3 py-2 rounded-lg border border-slate-300 outline-none focus:ring-2 focus:ring-indigo-500">
-                        </div>
-                    </div>
-                `);
-            }
-        }
-
-        async function generateReport() {
-            const productInputs = document.querySelectorAll('.sold-product');
-            const quantityInputs = document.querySelectorAll('.sold-quantity');
-            const error = document.getElementById('error-step-4');
-            soldData = [];
-            const selectedIDs = new Set();
-
-            for (let i = 0; i < productInputs.length; i++) {
-                const id = Number(productInputs[i].value);
-                const quantity = Number(quantityInputs[i].value);
-                const product = products.find((item) => item.ID === id);
-
-                if (selectedIDs.has(id)) {
-                    error.textContent = 'Each sold product must be selected only once.';
-                    error.classList.remove('hidden');
-                    return;
-                }
-                if (!Number.isInteger(quantity) || quantity < 1 || quantity > product.Quantity) {
-                    error.textContent = `${product.Name} has only ${product.Quantity} units available.`;
-                    error.classList.remove('hidden');
-                    return;
-                }
-
-                selectedIDs.add(id);
-                soldData.push({ ID: id, Quantity: quantity });
-            }
-
-            error.classList.add('hidden');
-            await sendDataToBackend();
-        }
-
-        async function sendDataToBackend() {
-            const button = document.querySelector('button[onclick="generateReport()"]');
-            try {
-                button.disabled = true;
-                const response = await fetch('/generate-report', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ products, soldData })
-                });
-
-                const result = await response.json();
-                if (!response.ok) {
-                    throw new Error(result.error || 'The backend could not generate the report.');
-                }
-
-                reportData = result;
-                renderReport(result);
-                showStep(5);
-            } catch (error) {
-                document.getElementById('error-step-4').textContent =
-                    error.message || 'Failed to connect to Python server. Is it running?';
-                document.getElementById('error-step-4').classList.remove('hidden');
-            } finally {
-                button.disabled = false;
-            }
-        }
-
-        function renderReport(result) {
-            document.getElementById('rep-revenue').textContent = `₹${Number(result.revenue).toLocaleString()}`;
-            document.getElementById('rep-average').textContent = `₹${Number(result.average).toLocaleString()}`;
-            document.getElementById('rep-max-name').textContent = result.max_product || '-';
-            document.getElementById('rep-max-qty').textContent = result.max_product_qty ?? 0;
-            document.getElementById('rep-min-name').textContent = result.min_product || '-';
-            document.getElementById('rep-min-qty').textContent = result.min_product_qty ?? 0;
-
-            document.getElementById('report-table-body').innerHTML = result.products.map((product) => `
+            <table>
                 <tr>
-                    <td class="px-6 py-4 text-sm">${product.ID}</td>
-                    <td class="px-6 py-4 text-sm font-medium">${escapeHtml(product.Name)}</td>
-                    <td class="px-6 py-4 text-sm">₹${Number(product.Price).toLocaleString()}</td>
-                    <td class="px-6 py-4 text-sm">${product.InitialQuantity}</td>
-                    <td class="px-6 py-4 text-sm text-indigo-600 font-semibold">${product.Sold}</td>
-                    <td class="px-6 py-4 text-sm">${product.Quantity}</td>
+                    <th>Total Revenue</th>
+                    <td>${data.revenue}</td>
                 </tr>
-            `).join('');
-        }
 
-        function downloadCSV() {
-            if (!reportData) return;
+                <tr>
+                    <th>Average Sale</th>
+                    <td>${data.average}</td>
+                </tr>
 
-            const rows = [
-                ['ID', 'Product', 'Price', 'Initial Quantity', 'Sold', 'Remaining']
-            ];
-            reportData.products.forEach((product) => rows.push([
-                product.ID, product.Name, product.Price, product.InitialQuantity, product.Sold, product.Quantity
-            ]));
-            rows.push([], ['Total Revenue', reportData.revenue], ['Average Sale', reportData.average]);
+                <tr>
+                    <th>Maximum Sold Product</th>
+                    <td>${data.max_product} (${data.max_product_qty})</td>
+                </tr>
 
-            const csv = rows.map((row) => row.map((value) =>
-                `"${String(value ?? '').replace(/"/g, '""')}"`
-            ).join(',')).join('\n');
-            const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = reportData.filename || 'sales_report.csv';
-            link.click();
-            URL.revokeObjectURL(url);
-        }
+                <tr>
+                    <th>Minimum Sold Product</th>
+                    <td>${data.min_product} (${data.min_product_qty})</td>
+                </tr>
+            </table>
 
-        function resetApp() {
-            products = [];
-            soldData = [];
-            reportData = null;
-            document.getElementById('total-products').value = '';
-            document.getElementById('types-sold').value = '';
-            document.getElementById('product-forms-container').innerHTML = '';
-            document.getElementById('sales-forms-container').innerHTML = '';
-            showStep(1);
-        }
+            <p><strong>CSV File:</strong> ${data.filename}</p>
+            <p><strong>Saved Location:</strong> <code>${data.saved_path}</code></p>
+            <a class="download-link" href="${data.download_url}" download="${data.filename}">
+                Download CSV Again
+            </a>
+        `;
 
-        function escapeHtml(value) {
-            const element = document.createElement('div');
-            element.textContent = value;
-            return element.innerHTML;
-        }
+    } catch (error) {
+        showMessage(error.message, "error");
+        console.error("Report generation error:", error);
+    }
+}
+
+addProduct();
+addSale();
 </script>
+
 </body>
 </html>
