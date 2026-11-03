@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<link rel="stylesheet" href="Daily_sales_report.css">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Sales Report</title>
+
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Daily Sales Report</h1>
+<p>Manage products and generate your daily sales report.</p>
+
+<!-- PRODUCT SECTION -->
+<div class="section">
+<h2>1. Product Inventory</h2>
+<p>Enter product details and initial stock quantities.</p>
+
+<div id="products"></div>
+
+<button class="add-btn" onclick="addProduct()">
++ Add Product
+</button>
+</div>
+
+<!-- SALES SECTION -->
+<div class="section">
+<h2>2. Record Sales</h2>
+<p>Select the product and enter the sold quantity.</p>
+
+<div id="sales"></div>
+
+<button class="add-btn" onclick="addSale()">
++ Add Sale
+</button>
+</div>
+
+<!-- GENERATE REPORT -->
+<div class="section">
+<button class="generate-btn" onclick="generateReport()">
+Generate Report
+</button>
+</div>
+
+<div id="message" role="status" aria-live="polite"></div>
+
+<div id="result"></div>
+</div>
+
+<script src="Daily_sales_report.js"></script>
+</body>
+</html>

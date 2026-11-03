@@ -1,0 +1,136 @@
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+    padding: 30px;
+    color: #333;
+}
+
+.container {
+    max-width: 1000px;
+    margin: auto;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+}
+
+h1, h2 {
+    color: #26364a;
+}
+
+.section {
+    margin-top: 30px;
+}
+
+label {
+    display: block;
+    font-size: 15px;
+    color: #333;
+}
+
+input, select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 7px;
+    font-size: 15px;
+    margin-top: 7px;
+}
+
+/* Updated to match the bordered card style of the second photo */
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+.sale-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+}
+
+button {
+    border: none;
+    padding: 12px 20px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 15px;
+    margin: 5px 5px 5px 0;
+}
+
+.add-btn {
+    background: #e8f1ff;
+    color: #1769aa;
+}
+
+.generate-btn {
+    background: #07966f;
+    color: white;
+    font-weight: bold;
+    padding: 15px 25px;
+}
+
+.download-link {
+    display: inline-block;
+    margin-top: 10px;
+    background: #1769aa;
+    color: white;
+    text-decoration: none;
+    padding: 10px 16px;
+    border-radius: 7px;
+    font-size: 14px;
+}
+
+#message {
+    margin-top: 20px;
+    padding: 12px;
+    border-radius: 7px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.success {
+    background: #e3f8ed;
+    color: #08783e;
+}
+
+.error {
+    background: #ffe8e8;
+    color: #c62828;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+td, th {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+@media(max-width: 650px) {
+    .form-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .sale-grid {
+        grid-template-columns: 1fr;
+    }
+}
